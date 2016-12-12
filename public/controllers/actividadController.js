@@ -48,18 +48,12 @@ angular
 				$scope.forms.actividadListar.display=true;
 			},
 			si:()=>{
-				$scope.displayFalse();
 				$http
 					.get($scope.routes.get.actividad+$scope.modelo.id)
 					.error(()=>{console.log($scope.routes.get.actividad+$scope.modelo.id+' : No Data');})
 					.success((json)=>{if(json.result){
-						$scope.modelo.tipo=json.rows.tipo;
-						$scope.modelo.titulo=json.rows.titulo;
-						$scope.modelo.actividad=json.rows.actividad;
-						$scope.modelo.requisitos=json.rows.requisitos;
-						$scope.modelo.estado=json.rows.estado;
-						$scope.modelo.fecha=json.rows.fecha;
-						$scope.modelo.archivos=json.rows.archivos;
+						$scope.displayFalse();
+						$scope.modelo=json.rows;
 						$scope.forms.actividadModificar.display=true;
 					}});
 			}
@@ -74,13 +68,9 @@ angular
 				$scope.displayFalse();
 				uri = $scope.routes.put.actividad+$scope.modelo.id+'/activar';
 				$http
-					.put(uri,{estado:$scope.lista[$scope.modelo.key].estado})
+					.put(uri)
 					.error(()=>{console.log(uri+' : No Data');})
-					.success((json)=>{if(json.result){
-						$scope.lista[$scope.modelo.key].estado=json.rows;
-						$scope.modelo.key=null;
-						$scope.modelo.id=null;
-					}});
+					.success((json)=>{if(json.result)$scope.listaReset();});
 				$scope.forms.actividadListar.display=true;
 			}
 		},
@@ -96,12 +86,7 @@ angular
 				$http
 					.delete(uri)
 					.error(()=>{console.log(uri+' : No Data')})
-					.success((json)=>{if(json.result){
-						$scope.lista.splice($scope.modelo.key,1);
-						$scope.modelo.key=null;
-						$scope.modelo.id=null;
-						$scope.forms.actividadListar.display=true;
-					}});
+					.success((json)=>{if(json.result)$scope.listaReset();});
 			}
 		},
 		autorizarSubirArchivo:{
@@ -161,7 +146,7 @@ angular
 					$http
 						.delete($scope.routes.delete.archivo+id)
 						.error(()=>{console.log($scope.routes.delete.archivo+id+' : No Data');})
-						.success((json)=>{if(json.result) $scope.modelo.archivos.splice(key,1); });
+						.success((json)=>{if(json.result) $sope.listaReset(); });
 				}
 				$scope.dialogs.autorizarEliminarArchivo.display=false;
 			}
@@ -183,15 +168,7 @@ angular
 					$http
 						.post($scope.routes.post.actividad,$scope.modelo)
 						.error(()=>{console.log($scope.routes.post.actividad+' : No Data');})
-						.success((json)=>{if(json.result){
-							$scope.lista.unshift({
-								id:json.rows.id,
-								titulo:json.rows.titulo,
-								fecha:json.rows.fecha,
-								requisitos:json.rows.requisitos,
-								estado:json.rows.estado
-							});
-						}});
+						.success((json)=>{if(json.result)$scope.listaReset();});
 				});
 				$scope.forms.actividadListar.display=true;
 			},
@@ -213,23 +190,10 @@ angular
 			aceptar:()=>{
 				$scope.displayFalse();
 				uri = $scope.routes.put.actividad+$scope.modelo.id;
-				tmp = [];
-				for(i in $scope.modelo.archivos) if($scope.modelo.archivos[i].resource=='local') tmp.push($scope.modelo.archivos[i]);
-				$scope.modelo.archivos = tmp;
 				$http
 					.put(uri,$scope.modelo)
 					.error(()=>{console.log(uri+' : No Data');})
-					.success((json)=>{if(json.result){
-						$scope.lista.splice($scope.modelo.key,1);
-						$scope.lista.unshift({
-							id:json.rows.id,
-							titulo:json.rows.titulo,
-							fecha:json.rows.fecha,
-							requisitos:json.rows.requisitos,
-							estado:json.rows.estado
-						});
-						$scope.forms.actividadListar.display=true;
-					}});
+					.success((json)=>{if(json.result)$scope.listaReset();});
 			},
 			subirArchivos:()=>{
 				$scope.dialogs.autorizarSubirArchivo.display=true;
@@ -242,8 +206,7 @@ angular
 		actividadVisualizar:{
 			display:false,
 			aceptar:()=>{
-				$scope.displayFalse();
-				$scope.forms.actividadListar.display=true;
+				$scope.listaReset();
 			},
 		
 		},
@@ -319,28 +282,22 @@ angular
 		$scope.forms.actividadListar.display=false;
 	};
 
-	$scope.init = ()=>{
-		data = $session.get('user');
-		$scope.user = JSON.parse(data);
-		$rootScope.usuario = $scope.user.usuario;
-		$rootScope.stage=true;
+	$scope.listaReset = ()=>{
 		$scope.displayFalse();
 		uri = $scope.routes.get.actividades;
 		$http
 			.get(uri)
 			.error(()=>{console.log(uri+' : No Data');})
-			.success((json)=>{if(json.result){
-				for(i in json.rows){
-					$scope.lista.push({
-						id:json.rows[i].id,
-						titulo:json.rows[i].titulo,
-						fecha:json.rows[i].fecha,
-						requisitos:json.rows[i].requisitos,
-						estado:json.rows[i].estado
-					});
-				}
-			}});
+			.success((json)=>{if(json.result) $scope.lista=json.rows;});
 		$scope.forms.actividadListar.display=true;
+	};
+
+	$scope.init = ()=>{
+		data = $session.get('user');
+		$scope.user = JSON.parse(data);
+		$rootScope.usuario = $scope.user.usuario;
+		$rootScope.stage=true;
+		$scope.listaReset();
 	};
 
 	$session.autorize(()=>{
