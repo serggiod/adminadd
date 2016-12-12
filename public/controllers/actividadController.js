@@ -146,7 +146,7 @@ angular
 					$http
 						.delete($scope.routes.delete.archivo+id)
 						.error(()=>{console.log($scope.routes.delete.archivo+id+' : No Data');})
-						.success((json)=>{if(json.result) $sope.listaReset(); });
+						.success((json)=>{if(json.result) $scope.modelo.archivos.splice(key,1); });
 				}
 				$scope.dialogs.autorizarEliminarArchivo.display=false;
 			}
