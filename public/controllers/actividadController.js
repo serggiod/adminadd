@@ -32,125 +32,9 @@ angular
 
 	$scope.lista = [];
 
-	// Estructura de control de la presentacion.
 	$scope.statusbar = {
 		display:false,
 		progress:'0'
-	};
-
-	$scope.dialogs = {
-		autorizarModificar:{
-			display:false,
-			no:()=>{
-				$scope.modelo.key=null;
-				$scope.modelo.id=null;
-				$scope.displayFalse();
-				$scope.forms.actividadListar.display=true;
-			},
-			si:()=>{
-				$http
-					.get($scope.routes.get.actividad+$scope.modelo.id)
-					.error(()=>{console.log($scope.routes.get.actividad+$scope.modelo.id+' : No Data');})
-					.success((json)=>{if(json.result){
-						$scope.displayFalse();
-						$scope.modelo=json.rows;
-						$scope.forms.actividadModificar.display=true;
-					}});
-			}
-		},
-		autorizarActivar:{
-			display:false,
-			no:()=>{
-				$scope.displayFalse();
-				$scope.forms.actividadListar.display=true;
-			},
-			si:()=>{
-				$scope.displayFalse();
-				uri = $scope.routes.put.actividad+$scope.modelo.id+'/activar';
-				$http
-					.put(uri)
-					.error(()=>{console.log(uri+' : No Data');})
-					.success((json)=>{if(json.result)$scope.listaReset();});
-				$scope.forms.actividadListar.display=true;
-			}
-		},
-		autorizarEliminar:{
-			display:false,
-			no:()=>{
-				$scope.displayFalse();
-				$scope.forms.actividadListar.display=true;
-			},
-			si:()=>{
-				$scope.displayFalse();
-				uri = $scope.routes.delete.actividad+$scope.modelo.id;
-				$http
-					.delete(uri)
-					.error(()=>{console.log(uri+' : No Data')})
-					.success((json)=>{if(json.result)$scope.listaReset();});
-			}
-		},
-		autorizarSubirArchivo:{
-			display:false,
-			input:null,
-			tmp:[],
-			no:()=>{
-				$scope.dialogs.autorizarSubirArchivo.tmp.splice(0);
-				if($scope.dialogs.autorizarSubirArchivo.input) $scope.dialogs.autorizarSubirArchivo.input.value='';
-				$scope.dialogs.autorizarSubirArchivo.display=false;
-			},
-			si:()=>{
-				if($scope.dialogs.autorizarSubirArchivo.tmp.length){
-					for(i in $scope.dialogs.autorizarSubirArchivo.tmp){
-						$scope.modelo.archivos.unshift($scope.dialogs.autorizarSubirArchivo.tmp[i]);
-					}
-					$scope.dialogs.autorizarSubirArchivo.input.value='';
-					$scope.dialogs.autorizarSubirArchivo.tmp.splice(0);
-				}
-				$scope.dialogs.autorizarSubirArchivo.display=false;
-			},
-			onchange:(input)=>{
-				$scope.dialogs.autorizarSubirArchivo.input = input;
-				for(i in input.files){
-					if(input.files[i].type.toString().substring(0,5)==='image'){
-						reader = new FileReader();
-						reader.onload = (img)=>{
-							imgstr = img.target.result.toString(); 
-							x = imgstr.indexOf(';');
-							tipo = imgstr.substring(5,x);
-							archivo = {
-								id:null,
-								archivo:imgstr,
-								tipo:tipo,
-								resource:'local'
-							};
-							$scope.dialogs.autorizarSubirArchivo.tmp.push(archivo);
-						};
-						reader.readAsDataURL(input.files[i]);
-					}
-				}
-			},
-		},
-		autorizarEliminarArchivo:{
-			key:null,
-			display:false,
-			no:()=>{
-				$scope.dialogs.autorizarEliminarArchivo.display=false;
-			},
-			si:()=>{
-				key = $scope.dialogs.autorizarEliminarArchivo.key;
-				if($scope.modelo.archivos[key].resource==='local'){
-					$scope.modelo.archivos.splice(key,1);
-				}
-				if($scope.modelo.archivos[key].resource==='remote'){
-					id = $scope.modelo.archivos[key].id;
-					$http
-						.delete($scope.routes.delete.archivo+id)
-						.error(()=>{console.log($scope.routes.delete.archivo+id+' : No Data');})
-						.success((json)=>{if(json.result) $scope.modelo.archivos.splice(key,1); });
-				}
-				$scope.dialogs.autorizarEliminarArchivo.display=false;
-			}
-		}
 	};
 
 	$scope.forms  = {
@@ -171,13 +55,6 @@ angular
 						.success((json)=>{if(json.result)$scope.listaReset();});
 				});
 				$scope.forms.actividadListar.display=true;
-			},
-			subirArchivos:()=>{
-				$scope.dialogs.autorizarSubirArchivo.display=true;
-			},
-			eliminarArchivos:(key)=>{
-				$scope.dialogs.autorizarEliminarArchivo.key=key;
-				$scope.dialogs.autorizarEliminarArchivo.display=true;
 			}
 		},
 		actividadModificar:{
@@ -194,13 +71,6 @@ angular
 					.put(uri,$scope.modelo)
 					.error(()=>{console.log(uri+' : No Data');})
 					.success((json)=>{if(json.result)$scope.listaReset();});
-			},
-			subirArchivos:()=>{
-				$scope.dialogs.autorizarSubirArchivo.display=true;
-			},
-			eliminarArchivos:(key)=>{
-				$scope.dialogs.autorizarEliminarArchivo.key=key;
-				$scope.dialogs.autorizarEliminarArchivo.display=true;
 			}
 		},
 		actividadVisualizar:{
@@ -233,6 +103,8 @@ angular
 			visualizarActividad:(k)=>{
 				id = $scope.lista[k].id;
 				$scope.displayFalse();
+				$scope.statusbar.display=true;
+				$scope.statusbar.progress=100;
 				$http
 					.get($scope.routes.get.actividad+id)
 					.error(()=>{console.log($scope.routes.get.actividad+id+' : No Data');})
@@ -245,37 +117,122 @@ angular
 						$scope.modelo.estado=json.rows.estado;
 						$scope.modelo.fecha=json.rows.fecha;
 						$scope.modelo.archivos=json.rows.archivos;
+						$scope.displayFalse();
 						$scope.forms.actividadVisualizar.display=true;
 					}});
 			},
 			modificarActividad:(k)=>{
-				$scope.modelo.key=k;
-				$scope.modelo.id=$scope.lista[k].id;
-				$scope.displayFalse();
-				$scope.dialogs.autorizarModificar.display=true;
+				if(confirm('¿Esta seguro que desea modificar este registro?')){
+					$scope.modelo.key=k;
+					$scope.modelo.id=$scope.lista[k].id;
+					$scope.displayFalse();
+					$scope.statusbar.display=true;
+					$scope.statusbar.progress=100;
+					$http
+						.get($scope.routes.get.actividad+$scope.modelo.id)
+						.error(()=>{console.log($scope.routes.get.actividad+$scope.modelo.id+' : No Data');})
+						.success((json)=>{if(json.result){
+							$scope.displayFalse();
+							$scope.modelo=json.rows;
+							$scope.forms.actividadModificar.display=true;
+						}});
+				}
 			},
 			activarActividad:(k)=>{
-				$scope.modelo.key=k;
-				$scope.modelo.id=$scope.lista[k].id
-				$scope.displayFalse();
-				$scope.dialogs.autorizarActivar.display=true;
+				if(confirm('¿Esta seguro que desea activar/desactivar este registro?')){
+					$scope.modelo.key=k;
+					$scope.modelo.id=$scope.lista[k].id
+					$scope.displayFalse();
+					$scope.statusbar.display=true;
+					$scope.statusbar.progress=100;
+					uri = $scope.routes.put.actividad+$scope.modelo.id+'/activar';
+					$http
+						.put(uri)
+						.error(()=>{console.log(uri+' : No Data');})
+						.success((json)=>{if(json.result)$scope.listaReset();});					
+				}
 			},
 			eliminarActividad:(k)=>{
-				$scope.modelo.key=k;
-				$scope.modelo.id=$scope.lista[k].id
-				$scope.displayFalse();
-				$scope.dialogs.autorizarEliminar.display=true;
+				if(confirm('¿Esta seguro que desea eliminar este registro?')){
+					$scope.modelo.key=k;
+					$scope.modelo.id=$scope.lista[k].id
+					$scope.displayFalse();
+					$scope.statusbar.display=true;
+					$scope.statusbar.progress=100;
+					uri = $scope.routes.delete.actividad+$scope.modelo.id;
+					$http
+						.delete(uri)
+						.error(()=>{console.log(uri+' : No Data')})
+						.success((json)=>{if(json.result)$scope.listaReset();});					
+				}
 			}
 		},
 	};
 
+	$scope.upload = ()=>{
+		input = document.getElementById('archivos');
+		input.addEventListener('change',()=>{
+			for(i=0;i<input.files.length;i++){
+				type = input.files[i].type;
+				if(type.toString().substring(0,5)==='image'){
+					reader = new FileReader();
+					reader.onload = (img)=>{
+
+						// Crear una imagen.
+						image = new Image();
+						image.src = img.target.result.toString();
+						
+						// Ancho y alto relativo a la imagen.
+						width   = 450;
+						height  = parseInt(((parseInt(((100*width)/image.width))) *image.height) /100);
+						
+						// Crear elemnto canvas.
+						canvas  = document.createElement('canvas');
+						canvas.width = width;
+						canvas.height=height;
+
+						// Dibujar en el contexto2d una nueva imagen.
+						context = canvas.getContext('2d');
+						context.drawImage(image,0,0,width,height);
+
+						$scope.modelo.archivos.push({
+							id:null,
+							archivo:canvas.toDataURL('image/jpg',0.8).toString(),
+							tipo:type,
+							resource:'local'
+						});
+
+						$scope.$apply();
+					};
+					reader.readAsDataURL(input.files[i]);
+				}
+			}
+			input.value='';
+		})
+		input.click();
+	};
+
+	$scope.delete=(key)=>{
+		if(confirm('¿Esta seguro de que desea eliminar este archivo?')){
+			if($scope.modelo.archivos[key].resource==='local'){
+				$scope.modelo.archivos.splice(key,1);
+			}
+			if($scope.modelo.archivos[key].resource==='remote'){
+				id  = $scope.modelo.archivos[key].id;
+				uri = $scope.routes.delete.archivo+id;
+				$http
+					.delete(uri)
+					.error(()=>{console.log(uri+' : No Data');})
+					.success((json)=>{if(json.result){
+						$scope.modelo.archivos.splice(key,1);
+					}});
+			}
+		}
+		
+	};
+
 	$scope.displayFalse = ()=>{
 		$scope.statusbar.display=false;
-		$scope.dialogs.autorizarModificar.display=false;
-		$scope.dialogs.autorizarActivar.display=false;
-		$scope.dialogs.autorizarEliminar.display=false;
-		$scope.dialogs.autorizarSubirArchivo.display=false,
-		$scope.dialogs.autorizarEliminarArchivo.display=false;
 		$scope.forms.actividadNuevo.display=false;
 		$scope.forms.actividadModificar.display=false;
 		$scope.forms.actividadVisualizar.display=false;
@@ -288,8 +245,12 @@ angular
 		$http
 			.get(uri)
 			.error(()=>{console.log(uri+' : No Data');})
-			.success((json)=>{if(json.result) $scope.lista=json.rows;});
-		$scope.forms.actividadListar.display=true;
+			.success((json)=>{
+				if(json.result){
+					$scope.lista=json.rows;
+					$scope.forms.actividadListar.display=true;
+				}
+			});
 	};
 
 	$scope.init = ()=>{
