@@ -170,46 +170,43 @@ angular
 	};
 
 	$scope.upload = ()=>{
-		input = document.getElementById('archivos');
+		input = document.createElement('input');
+		input.multiple=false;
+		input.type='file';
+		input.lang='es';
+		input.accept='image/*';
+		input.click();
 		input.addEventListener('change',()=>{
 			for(i=0;i<input.files.length;i++){
-				type = input.files[i].type;
+				file = input.files[i];
+				type = file.type;
 				if(type.toString().substring(0,5)==='image'){
 					reader = new FileReader();
-					reader.onload = (img)=>{
-
-						// Crear una imagen.
-						image = new Image();
-						image.src = img.target.result.toString();
-						
-						// Ancho y alto relativo a la imagen.
-						width   = 450;
-						height  = parseInt(((parseInt(((100*width)/image.width))) *image.height) /100);
-						
-						// Crear elemnto canvas.
-						canvas  = document.createElement('canvas');
-						canvas.width = width;
-						canvas.height=height;
-
-						// Dibujar en el contexto2d una nueva imagen.
-						context = canvas.getContext('2d');
-						context.drawImage(image,0,0,width,height);
-
-						$scope.modelo.archivos.push({
-							id:null,
-							archivo:canvas.toDataURL('image/jpg',0.8).toString(),
-							tipo:type,
-							resource:'local'
-						});
-
-						$scope.$apply();
-					};
-					reader.readAsDataURL(input.files[i]);
+					reader.readAsDataURL(file);
+					reader.addEventListener('loadend',(object)=>{
+						if(reader.readyState===2){
+							img     = document.createElement('img');
+							img.src = reader.result;
+							img.addEventListener('load',()=>{
+								canvas        = document.createElement('canvas');
+								canvas.width  = 450;
+								canvas.height = parseInt(((parseInt(((100*canvas.width)/img.width))) *img.height) /100);
+								context       = canvas.getContext('2d');
+								context.drawImage(img,0,0,canvas.width,canvas.height);
+								$scope.modelo.archivos.push({
+									id:null,
+									archivo:canvas.toDataURL(type,0.8),
+									tipo:type,
+									resource:'local'
+								});
+								$scope.$apply();
+								console.log($scope.modelo.archivos);
+							});
+						}
+					});
 				}
 			}
-			input.value='';
-		})
-		input.click();
+		});
 	};
 
 	$scope.delete=(key)=>{
