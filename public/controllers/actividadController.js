@@ -69,8 +69,8 @@ angular
 				uri = $scope.routes.put.actividad+$scope.modelo.id;
 				$http
 					.put(uri,$scope.modelo)
-					.error(()=>{console.log(uri+' : No Data');})
-					.success((json)=>{if(json.result)$scope.listaReset();});
+					.error(()=>{console.log(uri+' : No Data');$scope.listaReset();})
+					.success(()=>{if(json.result)$scope.listaReset();});
 			}
 		},
 		actividadVisualizar:{
@@ -250,16 +250,11 @@ angular
 			});
 	};
 
-	$scope.init = ()=>{
-		data = $session.get('user');
-		$scope.user = JSON.parse(data);
-		$rootScope.usuario = $scope.user.usuario;
-		$rootScope.stage=true;
+	$scope.init = function(){
+		$session.init();
 		$scope.listaReset();
 	};
 
-	$session.autorize(()=>{
-		$scope.init();
-	});	
+	$scope.init();
 
 });
