@@ -43,28 +43,26 @@ angular
                 cancelar: function() {
                     $scope.modelo.key = null;
                     $scope.modelo.id = null;
-                    $scope.displayFalse();
-                    $scope.forms.actividadListar.display = true;
+                    $scope.listaReset();
                 },
                 aceptar: function() {
-                    $scope.displayFalse();
+                    $scope.statusbar.display = true;
                     $session.autorize(() => {
                         $http
                             .post($scope.routes.post.actividad, $scope.modelo)
                             .success(function() { $scope.listaReset(); });
                     });
-                    $scope.forms.actividadListar.display = true;
                 }
             },
             actividadModificar: {
                 display: false,
                 cancelar: function() {
                     $scope.modelo.id = null;
-                    $scope.displayFalse();
+                    $scope.listaReset();
                     $scope.forms.actividadListar.display = true;
                 },
                 aceptar: function() {
-                    $scope.displayFalse();
+                    $scope.statusbar.display = true;
                     uri = $scope.routes.put.actividad + $scope.modelo.id;
                     $http
                         .put(uri, $scope.modelo)
@@ -228,12 +226,14 @@ angular
 
         $scope.listaReset = function() {
             $scope.displayFalse();
+            $scope.statusbar.display = true;
             uri = $scope.routes.get.actividades;
             $http
                 .get(uri)
                 .success(function(json) {
                     if (json.result === true) $scope.forms.actividadListar.display = true;
                     $scope.lista = json.rows;
+                    $scope.statusbar.display = false;
                 });
         };
 
